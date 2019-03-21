@@ -107,6 +107,73 @@ var Updater = {
   /**
    * Make the check for the update
    * */
+  process : function(onlineInfo,callback)
+  {
+    if (callback) {
+      this.setup.callback = callback
+    }
+
+    // Get the current version
+    try{
+      var packageInfo = JSON.parse(fs.readFileSync(AppPath + 'package.json'))
+    } catch(e) {
+      console.error(e)
+    }
+
+    this.log(packageInfo.version)
+
+    // If the version property not specified
+    if (!packageInfo.version) {
+      this.log(
+        'The "version" property not specified inside the application package.json'
+      )
+      this.end(0)
+
+      return false
+    }
+
+    try {
+      let response = {}
+
+      if (Updater.setup.server) {
+        response = onlineInfo
+      } else {
+        response = { last: onlineInfo.version }
+        if (onlineInfo.version !== packageInfo.version) {
+          response.source = onlineInfo.asar
+        }
+        if(onlineInfo.sha1) {
+          response.sha1 = onlineInfo.sha1
+        }
+      }
+
+      // If the "last" property is not defined
+      if (!response.last) {
+        throw false
+      }
+
+      // Update available
+      if (response.source) {
+        Updater.log('Update available: ' + response.last)
+
+        // Store the response
+        Updater.update = response
+
+        // Ask user for confirmation
+        Updater.end(undefined, onlineInfo)
+      } else {
+        Updater.log('No updates available')
+        Updater.end(2)
+
+        return false
+      }
+    } catch (error) {
+      Updater.log(error)
+      Updater.log('API response is not valid')
+      Updater.end(3)
+    }
+  },
+
   check: function (callback) {
     if (callback) {
       this.setup.callback = callback
