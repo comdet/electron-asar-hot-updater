@@ -1,4 +1,4 @@
-const { app } = require('electron')
+const { remote } = require('electron')
 const FileSystem = require('original-fs')
 const Utils = require('util')
 const request = require('request')
@@ -10,7 +10,7 @@ const crypto = require('crypto')
 // Yes, it's weird, but we need the trailing slash after the .asar
 // so we can read paths "inside" it, e.g. the package.json, where we look
 // for our current version
-const AppPath = app.getAppPath() + '/'
+const AppPath = remote.app.getAppPath() + '/'
 const AppPathFolder = AppPath.slice(0, AppPath.indexOf('app.asar'))
 const AppAsar = AppPath.slice(0, -1)
 const WindowsUpdater =
