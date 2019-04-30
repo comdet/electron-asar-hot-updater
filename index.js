@@ -308,12 +308,12 @@ var Updater = {
                   Updater.log('sha1_error')
                 }
               }
+              process.noAsar = false;
               if (process.platform === 'darwin') {
                 Updater.apply()
               } else {
                 Updater.mvOrMove()
               }
-              process.noAsar = false;
             } catch (error) {
               Updater.log('unzip error: ' + error)
             }
