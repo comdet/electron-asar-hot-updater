@@ -454,7 +454,7 @@ var Updater = {
   // app.asar is always EBUSY on Windows, so we need to try another
   // way of replacing it. This should get called after the main Electron
   // process has quit. Win32 calls 'move' and other platforms call 'mv'
-  mvOrMove: function (child) {
+  mvOrMove: async function (child) {
     var updateAsar = AppPathFolder + 'update.asar'
     var appAsar = AppPathFolder + 'app.asar'
     var winArgs = ''
@@ -493,20 +493,27 @@ var Updater = {
           const { spawn } = require('child_process')
           // spawn(`${JSON.stringify(WindowsUpdater)}`,[`${JSON.stringify(updateAsar)}`,`${JSON.stringify(appAsar)}`], {detached: true, windowsVerbatimArguments: true, stdio: 'ignore'});
           // so we have to spawn a cmd shell, which then runs the updater, and leaves a visible window whilst running
-          spawn('cmd', ['/s', '/c', '"' + winArgs + '"'], {
+          const child = spawn('cmd', ['/s', '/c', '"' + winArgs + '"'], {
             detached: true,
             windowsVerbatimArguments: true,
             stdio: 'ignore'
           })
+		  child.on('exit', code => {
+			console.log(`Exit code is: ${code}`);
+			Updater.end();
+		  });
           //remote.app.quit()
           //finish update
-          Updater.end()
+          
         } else {
           // here's how we'd do this on Mac/Linux, but on Mac at least, the .asar isn't marked as busy, so the update process above
           // is able to overwrite it.
           //
           child.spawn('bash', ['-c', ['cd ' + JSON.stringify(AppPathFolder), 'mv -f update.asar app.asar'].join(' && ')], {detached: true});
-          Updater.end()
+   		  child.on('exit',code=>{
+   		  	console.log(`Exit code is: ${code}`);
+			Updater.end();
+		  })
         }
       } catch (error) {
       	console.log(error);
