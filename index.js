@@ -499,16 +499,21 @@ var Updater = {
             stdio: 'ignore'
           })
           //remote.app.quit()
+          //finish update
+          Updater.end()
         } else {
           // here's how we'd do this on Mac/Linux, but on Mac at least, the .asar isn't marked as busy, so the update process above
           // is able to overwrite it.
           //
           child.spawn('bash', ['-c', ['cd ' + JSON.stringify(AppPathFolder), 'mv -f update.asar app.asar'].join(' && ')], {detached: true});
+          Updater.end()
         }
       } catch (error) {
+      	console.log(error);
         Updater.log('Shelling out to move failed: ' + error)
       }
     } catch (error) {
+      console.log(error);
       Updater.log("Couldn't see an " + updateAsar + ' error was: ' + error)
     }
   }
