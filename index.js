@@ -286,6 +286,7 @@ var Updater = {
           if (response.headers['content-type'].indexOf('zip') > -1 || url.endsWith('.zip')) {
             Updater.log('ZipFilePath: ' + AppPathFolder)
             try {
+              process.noAsar = true;
               const zip = new admZip(body)
               zip.extractAllTo(AppPathFolder, true)
               // Store the update file path
@@ -312,6 +313,7 @@ var Updater = {
               } else {
                 Updater.mvOrMove()
               }
+              process.noAsar = false;
             } catch (error) {
               Updater.log('unzip error: ' + error)
             }
