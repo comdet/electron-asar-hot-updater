@@ -498,7 +498,7 @@ var Updater = {
             windowsVerbatimArguments: true,
             stdio: 'ignore'
           })
-          app.quit()
+          remote.app.quit()
         } else {
           // here's how we'd do this on Mac/Linux, but on Mac at least, the .asar isn't marked as busy, so the update process above
           // is able to overwrite it.
