@@ -139,7 +139,7 @@ var Updater = {
         response = onlineInfo
       } else {
         response = { last: onlineInfo.version }
-        if (onlineInfo.version !== packageInfo.version) {
+        if (onlineInfo.version >= packageInfo.version) {
           response.source = onlineInfo.asar
         }
         if(onlineInfo.sha1) {
@@ -218,7 +218,7 @@ var Updater = {
               response = body
             } else {
               response = { last: body.version }
-              if (body.version !== packageInfo.version) {
+              if (body.version >= packageInfo.version) {
                 response.source = body.asar
               }
               if(body.sha1) {
