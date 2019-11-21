@@ -140,7 +140,7 @@ var Updater = {
       } else {
         response = { last: onlineInfo.version }
         if (onlineInfo.version > packageInfo.version) {
-          response.source = onlineInfo.asar
+          response.source = onlineInfo.zip
         }
         if(onlineInfo.sha1) {
           response.sha1 = onlineInfo.sha1
@@ -174,100 +174,16 @@ var Updater = {
     }
   },
 
-  check: function (callback) {
-    if (callback) {
-      this.setup.callback = callback
-    }
-
-    // Get the current version
-    try{
-      var packageInfo = JSON.parse(fs.readFileSync(AppPath + 'package.json'))
-    } catch(e) {
-      console.error(e)
-    }
-
-    this.log(packageInfo.version)
-
-    // If the version property not specified
-    if (!packageInfo.version) {
-      this.log(
-        'The "version" property not specified inside the application package.json'
-      )
-      this.end(0)
-
-      return false
-    }
-
-    request(
-      {
-        url: this.setup.api,
-        method: 'post',
-        json: true,
-        body: {
-          name: packageInfo.name,
-          current: packageInfo.version
-        },
-        headers: this.setup.headers || {}
-      },
-      function (error, res, body) {
-        if (!error) {
-          try {
-            let response = {}
-
-            if (Updater.setup.server) {
-              response = body
-            } else {
-              response = { last: body.version }
-              if (body.version > packageInfo.version) {
-                response.source = body.asar
-              }
-              if(body.sha1) {
-                response.sha1 = body.sha1
-              }
-            }
-
-            // If the "last" property is not defined
-            if (!response.last) {
-              throw false
-            }
-
-            // Update available
-            if (response.source) {
-              Updater.log('Update available: ' + response.last)
-
-              // Store the response
-              Updater.update = response
-
-              // Ask user for confirmation
-              Updater.end(undefined, body)
-            } else {
-              Updater.log('No updates available')
-              Updater.end(2)
-
-              return false
-            }
-          } catch (error) {
-            Updater.log(error)
-            Updater.log('API response is not valid')
-            Updater.end(3)
-          }
-        } else {
-          Updater.log(error)
-          Updater.log('Could not connect')
-          Updater.end(1)
-        }
-      }
-    )
-  },
-
   /**
    * Download the update file
    * */
-  download: function (callback) {
+  download: function (extractPath,callback) {
     if (callback) {
       this.setup.callback = callback
     }
-
+    if (!extractPath){
+      extractPath = AppPathFolder;
+    }
     var url = this.update.source, fileName = 'update.asar', update_sha1 = this.update.sha1
 
     this.log('Downloading ' + url)
@@ -288,7 +204,7 @@ var Updater = {
             try {
               process.noAsar = true;
               const zip = new admZip(body)
-              zip.extractAllTo(AppPathFolder, true)
+              zip.extractAllTo(extractPath, true)
               // Store the update file path
               Updater.update.file = updateFile
               Updater.log('Updater.update.file: ' + updateFile)
@@ -297,8 +213,8 @@ var Updater = {
               // Apply the update
               if(update_sha1) {
                 try{
-                  var buffer = FileSystem.readFileSync(updateFile);
-                  var sha1 = Updater.sha1(buffer);
+                  //var buffer = FileSystem.readFileSync(updateFile);
+                  var sha1 = Updater.sha1(body)
                   if(sha1 !== update_sha1) {
                     Updater.log('Upload failed! Sha1 code mismatch.')
                     Updater.end(5)
@@ -309,56 +225,16 @@ var Updater = {
                 }
               }
               process.noAsar = false;
-              if (process.platform === 'darwin') {
-                Updater.apply()
-              } else {
-                Updater.mvOrMove()
+              if(Updater.update.type && Updater.update.type.includes("app")){ //this is app update
+                if (process.platform === 'darwin') {
+                  Updater.apply()
+                } else {
+                  Updater.mvOrMove()
+                }
               }
             } catch (error) {
               Updater.log('unzip error: ' + error)
             }
-          } else {
-            Updater.log('Upload successful!  Server responded with:')
-            Updater.log('updateFile: ' + updateFile)
-
-            // Create the file
-            FileSystem.writeFile(updateFile, body, null, function (error) {
-              if (error) {
-                Updater.log(
-                  error + '\n Failed to download the update to a local file.'
-                )
-                Updater.end(5)
-                return false
-              }
-
-              // Store the update file path
-              Updater.update.file = updateFile
-              Updater.log('Updater.update.file: ' + updateFile)
-
-              // Success
-              Updater.log('Update downloaded: ' + updateFile)
-
-              if(update_sha1) {
-                try{
-                  var buffer = FileSystem.readFileSync(updateFile);
-                  var sha1 = Updater.sha1(buffer);
-                  if(sha1 !== update_sha1) {
-                    Updater.log('Upload failed! Sha1 code mismatch.')
-                    Updater.end(5)
-                    return false
-                  }
-                } catch(e) {
-                  Updater.log('sha1_error')
-                }
-              }
-
-              // Apply the update
-              if (process.platform === 'darwin') {
-                Updater.apply()
-              } else {
-                Updater.mvOrMove()
-              }
-            })
           }
         }
       ),
