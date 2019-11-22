@@ -40,6 +40,7 @@ var Updater = {
     requestOptions: {},
     callback: false,
     progresscallback: false,
+    unzipCallback : false,
     debug: false
   },
 
@@ -204,7 +205,7 @@ var Updater = {
             try {
               process.noAsar = true;
               const zip = new admZip(body)
-              zip.extractAllTo(extractPath, true)
+              zip.extractAllTo(extractPath, true,)
               // Store the update file path
               Updater.update.file = updateFile
               Updater.log('Updater.update.file: ' + updateFile)
@@ -278,6 +279,11 @@ var Updater = {
     }
   },
 
+  registerUnzipCallback : function(callback) {
+    if (callback) {
+      this.setup.unzipCallback = callback
+    }
+  } 
   /**
    * Apply the update, remove app.asar and rename update.zip to app.asar
    * */
