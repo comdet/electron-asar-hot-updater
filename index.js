@@ -199,7 +199,7 @@ var Updater = {
           if (error) {
             return console.error('err')
           }
-          var updateFile = AppPathFolder + fileName
+          var updateFile = AppPathFolder + "/" + fileName
           if (response.headers['content-type'].indexOf('zip') > -1 || url.endsWith('.zip')) {
             Updater.log('ZipFilePath: ' + AppPathFolder)
             try {
