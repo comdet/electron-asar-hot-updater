@@ -287,7 +287,7 @@ var Updater = {
     if (callback) {
       this.setup.unzipCallback = callback
     }
-  } 
+  },
   /**
    * Apply the update, remove app.asar and rename update.zip to app.asar
    * */
