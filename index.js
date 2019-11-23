@@ -139,7 +139,7 @@ var Updater = {
       if (Updater.setup.server) {
         response = onlineInfo
       } else {
-        response = { last: onlineInfo.version }
+        response = { last: onlineInfo.version, info : onlineInfo }
         if (onlineInfo.version > packageInfo.version) {
           response.source = onlineInfo.zip
         }
@@ -230,7 +230,7 @@ var Updater = {
                 }
               }
               process.noAsar = false;
-              if(Updater.update.type && Updater.update.type.includes("app")){ //this is app update
+              if(Updater.update.info.type && Updater.update.info.type.includes("app")){ //this is app update
                 if (process.platform === 'darwin') {
                   Updater.apply()
                 } else {
