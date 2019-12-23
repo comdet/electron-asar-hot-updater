@@ -6,7 +6,7 @@ const progress = require('request-progress')
 const admZip = require('adm-zip')
 const fs = require('fs')
 const crypto = require('crypto')
-
+const { spawn } = require('child_process')
 // Yes, it's weird, but we need the trailing slash after the .asar
 // so we can read paths "inside" it, e.g. the package.json, where we look
 // for our current version
@@ -376,10 +376,10 @@ var Updater = {
           // and the windowsVerbatimArguments options argument, in combination with the /s switch, stops windows stripping quotes from our commandline
 
           // This doesn't work:
-          const { spawn } = require('child_process')
+          
           // spawn(`${JSON.stringify(WindowsUpdater)}`,[`${JSON.stringify(updateAsar)}`,`${JSON.stringify(appAsar)}`], {detached: true, windowsVerbatimArguments: true, stdio: 'ignore'});
           // so we have to spawn a cmd shell, which then runs the updater, and leaves a visible window whilst running
-          const child = spawn('cmd', ['/s', '/c', '"' + winArgs + '"'], {
+          let child = spawn('cmd', ['/s', '/c', '"' + winArgs + '"'], {
             detached: true,
             windowsVerbatimArguments: true,
             stdio: 'ignore'
@@ -395,7 +395,8 @@ var Updater = {
           // here's how we'd do this on Mac/Linux, but on Mac at least, the .asar isn't marked as busy, so the update process above
           // is able to overwrite it.
           //
-          child.spawn('bash', ['-c', ['cd ' + JSON.stringify(AppPathFolder), 'mv -f update.asar app.asar'].join(' && ')], {detached: true});
+
+          let child = spawn('bash', ['-c', ['cd ' + JSON.stringify(AppPathFolder), 'mv -f update.asar app.asar'].join(' && ')], {detached: true});
    		  child.on('exit',code=>{
    		  	console.log(`Exit code is: ${code}`);
 			Updater.end();
