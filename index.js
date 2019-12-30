@@ -236,6 +236,8 @@ var Updater = {
                 } else {
                   Updater.mvOrMove()
                 }
+              }else{
+                this.end()
               }
             } catch (error) {
               Updater.log('unzip error: ' + error)
