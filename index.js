@@ -23,7 +23,8 @@ const errors = [
   'api_response_not_valid',
   'update_file_not_found',
   'failed_to_download_update',
-  'failed_to_apply_update'
+  'failed_to_apply_update',
+  'extract_zip_error'
 ]
 
 /**
@@ -202,15 +203,17 @@ var Updater = {
           var updateFile = AppPathFolder + "/" + fileName
           if (response.headers['content-type'].indexOf('zip') > -1 || url.endsWith('.zip')) {
             Updater.log('ZipFilePath: ' + AppPathFolder)
-            try {
-              process.noAsar = true;
-              const zip = new admZip(body)
-              zip.extractAllToAsync(extractPath, true, function(file){
-                if(Updater.setup.unzipCallback) { //callback to main function
-                  Updater.setup.unzipCallback(file);
-                }
-              });
-              // Store the update file path
+            if(Updater.setup.unzipCallback) { //callback to main function
+              Updater.setup.unzipCallback(null);
+            }
+            process.noAsar = true;
+            const zip = new admZip(body)
+            zip.extractAllToAsync(extractPath, true, function(err){
+              if(err){
+                Updater.log('unzip error: ' + error);
+                Updater.end(7);
+                return;
+              }
               Updater.update.file = updateFile
               Updater.log('Updater.update.file: ' + updateFile)
               // Success
@@ -239,9 +242,7 @@ var Updater = {
               }else{
                 Updater.end()
               }
-            } catch (error) {
-              Updater.log('unzip error: ' + error)
-            }
+            });
           }
         }
       ),
@@ -378,7 +379,7 @@ var Updater = {
           // and the windowsVerbatimArguments options argument, in combination with the /s switch, stops windows stripping quotes from our commandline
 
           // This doesn't work:
-          
+
           // spawn(`${JSON.stringify(WindowsUpdater)}`,[`${JSON.stringify(updateAsar)}`,`${JSON.stringify(appAsar)}`], {detached: true, windowsVerbatimArguments: true, stdio: 'ignore'});
           // so we have to spawn a cmd shell, which then runs the updater, and leaves a visible window whilst running
           let child = spawn('cmd', ['/s', '/c', '"' + winArgs + '"'], {
@@ -386,26 +387,26 @@ var Updater = {
             windowsVerbatimArguments: true,
             stdio: 'ignore'
           })
-		  child.on('exit', code => {
-			console.log(`Exit code is: ${code}`);
-			Updater.end();
-		  });
+      child.on('exit', code => {
+      console.log(`Exit code is: ${code}`);
+      Updater.end();
+      });
           //remote.app.quit()
           //finish update
-          
+
         } else {
           // here's how we'd do this on Mac/Linux, but on Mac at least, the .asar isn't marked as busy, so the update process above
           // is able to overwrite it.
           //
 
           let child = spawn('bash', ['-c', ['cd ' + JSON.stringify(AppPathFolder), 'mv -f update.asar app.asar'].join(' && ')], {detached: true});
-   		  child.on('exit',code=>{
-   		  	console.log(`Exit code is: ${code}`);
-			Updater.end();
-		  })
+        child.on('exit',code=>{
+          console.log(`Exit code is: ${code}`);
+      Updater.end();
+      })
         }
       } catch (error) {
-      	console.log(error);
+        console.log(error);
         Updater.log('Shelling out to move failed: ' + error)
       }
     } catch (error) {
