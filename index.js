@@ -205,7 +205,7 @@ var Updater = {
             try {
               process.noAsar = true;
               const zip = new admZip(body)
-              zip.extractAllTo(extractPath, true, function(file){
+              zip.extractAllToAsync(extractPath, true, function(file){
                 if(Updater.setup.unzipCallback) { //callback to main function
                   Updater.setup.unzipCallback(file);
                 }
